@@ -1,19 +1,19 @@
 import board
 import time
-from timer import TON
+import lib.maintenance as mt
+from lib.timer import TON
 from digitalio import DigitalInOut, Direction, Pull
-from maintenance import config_feux, val_panne
 
-## configuration des entrées sorties
+# Config des GPIO
 
-Feu1Vert = DigitalInOut(board.GP16)
-Feu1Vert.direction = Direction.OUTPUT
+FeuVert = DigitalInOut(board.GP16)
+FeuVert.direction = Direction.OUTPUT
 
-Feu1Orange = DigitalInOut(board.GP17)
-Feu1Orange.direction = Direction.OUTPUT
+FeuOrange = DigitalInOut(board.GP17)
+FeuOrange.direction = Direction.OUTPUT
 
-Feu1Rouge = DigitalInOut(board.GP18)
-Feu1Rouge.direction = Direction.OUTPUT
+FeuRouge = DigitalInOut(board.GP18)
+FeuRouge.direction = Direction.OUTPUT
 
 Feu2Vert = DigitalInOut(board.GP27)
 Feu2Vert.direction = Direction.OUTPUT
@@ -24,179 +24,162 @@ Feu2Orange.direction = Direction.OUTPUT
 Feu2Rouge = DigitalInOut(board.GP22)
 Feu2Rouge.direction = Direction.OUTPUT
 
-LedJour = DigitalInOut(board.LED)
-LedJour.direction = Direction.OUTPUT
+FeuJour = DigitalInOut(board.LED)
+FeuJour.direction = Direction.OUTPUT
 
+BpMag = DigitalInOut(board.GP20)
+BpMag.direction = Direction.INPUT
+BpMag.pull = Pull.UP
 
-BP_Pieton1 = DigitalInOut(board.GP14)
-BP_Pieton1.direction = Direction.INPUT
-BP_Pieton1.pull = Pull.UP
+BpP1 = DigitalInOut(board.GP14)
+BpP1.direction = Direction.INPUT
+BpP1.pull = Pull.UP
 
-BP_Pieton2 = DigitalInOut(board.GP19)
-BP_Pieton2.direction = Direction.INPUT
-BP_Pieton2.pull = Pull.UP
+BpP2 = DigitalInOut(board.GP19)
+BpP2.direction = Direction.INPUT
+BpP2.pull = Pull.UP
 
-BoucleMag = DigitalInOut(board.GP20)
-BoucleMag.direction = Direction.INPUT
-BoucleMag.pull = Pull.UP
+# initialisation des étapes
 
-BP_Menu = DigitalInOut(board.GP12)
-BP_Menu.direction = Direction.INPUT
-BP_Menu.pull = Pull.UP
-
-BP_Plus = DigitalInOut(board.GP13)
-BP_Plus.direction = Direction.INPUT
-BP_Plus.pull = Pull.UP
-
-BP_Moins = DigitalInOut(board.GP11)
-BP_Moins.direction = Direction.INPUT
-BP_Moins.pull = Pull.UP
-
-
-Timer1Vert = TON()
-Timer1Orange = TON()
-Timer1Rouge = TON()
-
-Timer2Vert = TON()
-Timer2Orange = TON()
-Timer2Rouge = TON()
-
-TimerC1 = TON()
-TimerC2 = TON()
-
-TimerJour = TON()
-TimerNuit = TON()
-
-
-X0 = 1
 X1 = 1
-X10 = 0
-X100 = 1
-X1000 = 1
 X2 = 0
+
+X5 = 1
+X6 = 0
+
+X10 = 1
 X20 = 0
-X200 = 0
-X2000 = 0
 X30 = 0
 X40 = 0
 X50 = 0
 X60 = 0
+X70 = 0
 
-liste_duree = [5,1,1,5,1,1]
-mod = ["jour/nuit", "jour", "nuit"]
+X100 = 1
+X110 = 0
+
+Timer1 = TON()
+Timer2 = TON()
+Timer3 = TON()
+Timer4 = TON()
+Timer5 = TON()
+Timer6 = TON()
+
+listeTempos = [5,1,1,5,1,1]
+modes = ["jour","nuit","jour/nuit"]
+
+TimerJour = TON()
+TimerNuit = TON()
+
+TimerP1 = TON()
+TimerP2 = TON()
 
 while True:
-    panne = val_panne()
-    index, liste_duree, deroulement = config_feux(BP_Menu, BP_Plus, BP_Moins, liste_duree, mod,panne)
 
-    Timer1Vert.maj(liste_duree[0])
-    Timer1Orange.maj(liste_duree[1])
-    Timer1Rouge.maj(liste_duree[2])
+    # Mise à jour du timer
 
-    Timer2Vert.maj(liste_duree[3])
-    Timer2Orange.maj(liste_duree[4])
-    Timer2Rouge.maj(liste_duree[5])
-
-    TimerC1.maj(0.5)
-    TimerC2.maj(0.5)
+    Timer1.maj(listeTempos[0])
+    Timer2.maj(listeTempos[1])
+    Timer3.maj(listeTempos[2])
+    Timer4.maj(listeTempos[3])
+    Timer5.maj(listeTempos[4])
+    Timer6.maj(listeTempos[5])
 
     TimerJour.maj(20)
     TimerNuit.maj(20)
 
-    #les conditions d'évolution
-    CE0_10 = X2 and X0
-    CE10_20 = Timer1Vert.Q and X10 and (X100 or not BP_Pieton1.value or not BP_Pieton2.value or not BoucleMag.value or X1)
+    TimerP1.maj(0.5)
+    TimerP2.maj(0.5)
 
-    CE20_30 = (Timer1Orange.Q or X1) and X20
-    CE30_40 = (Timer1Rouge.Q or X1) and X30
-    CE40_50 = (Timer2Vert.Q or X1) and X40
-    CE50_60 = (Timer2Orange.Q or X1) and X50
-    CE60_10 = Timer2Rouge.Q and X60 and X2
-    CE60_0 = X1 and X60
+    # Les conditions dévolution
 
-    CE100_200 = (mod[index] == "jour/nuit" and TimerJour.Q and X100 ) or (mod[index] == "nuit")
-    CE200_100 = (mod[index] == "jour/nuit" and TimerNuit.Q and X200 ) or (mod[index] == "jour")
+    CE1_2 = (mt.panne == 0)
+    CE2_1 = (mt.panne == 1)
 
-    CE1_2 = X1 and deroulement
-    CE2_1 = X2 and panne
+    CE5_6 = TimerP1.Q and X5 and X1
+    CE6_5 = (TimerP2.Q and X6) or X2
 
-    CE1000_2000 = TimerC1.Q and X1000 and X1
-    CE2000_1000 = TimerC2.Q and X2000 and X1
+    CE10_20 = X2 and X10
+    CE20_30 = (Timer1.Q and X20 and X100) or BpMag.value == False or BpP1.value == False or BpP2.value == False or X1
+    CE30_40 = (Timer2.Q and X30) or X1
+    CE40_50 = (Timer3.Q and X40) or X1
+    CE50_60 = (Timer4.Q and X50) or X1
+    CE60_70 = (Timer5.Q and X60) or X1
+    CE70_20 = Timer6.Q and X70 and X2
+    CE70_10 = X1
 
-    #Grafcet fonctionnement normal
-    if CE0_10 :
-        X10=1
-        X0=0
-    elif CE10_20 :
-        X20=1
-        X10=0
-    elif CE20_30 :
-        X30=1
-        X20=0
-    elif CE30_40 :
-        X40=1
-        X30=0
-    elif CE40_50:
-        X50=1
-        X40=0
-    elif CE50_60:
-        X60=1
-        X50=0
-    elif CE60_10:
-        X10=1
-        X60=0
-    elif CE60_0:
-        X0=1
-        X60=0
+    CE100_110 = (TimerJour.Q and X100 and (mt.indexMenu == 2)) or mt.indexMenu == 1
+    CE110_100 = (TimerNuit.Q and X110 and (mt.indexMenu == 2)) or mt.indexMenu == 0
 
-    #Grafcet jour/nuit
-    if CE100_200 :
-        X200=1
-        X100=0
-    elif CE200_100 :
-        X100=1
-        X200=0
+    # étapes
 
-    #Grafcet clignotement
-    if CE1_2:
-        X2=1
-        X1=0
-    elif CE2_1:
-        X1=1
-        X1000=1
-        X2=0
+    if CE1_2 :
+        X1 = 0
+        X2 = 1
+    if CE2_1 :
+        X2 = 0
+        X1 = 1
 
-    #Grafcet feux oranges
-    if CE1000_2000:
-        X2000=1
-        X1000=0
-    elif CE2000_1000:
-        X1000=1
-        X2000=0
+    if CE5_6 :
+        X5 = 0
+        X6 = 1
+    if CE6_5 :
+        X6 = 0
+        X5 = 1
 
-    Feu1Vert.value = X10 and not X1
-    Feu1Orange.value = X20
-    Feu1Rouge.value = (X30 or X40 or X50 or X60) and not X1
+    if CE10_20:
+        X20 =1
+        X10 =0
+    if CE20_30 :
+        X30 = 1
+        X20 = 0
+    if CE30_40 :
+        X30 = 0
+        X40 = 1
+    if CE40_50 :
+        X40 = 0
+        X50 = 1
+    if CE50_60 :
+        X50 = 0
+        X60 = 1
+    if CE60_70 :
+        X60 = 0
+        X70 = 1
+    if CE70_20 :
+        X70 = 0
+        X20 = 1
+    if CE70_10 :
+        X70 = 0
+        X10 = 1
 
-    Timer1Vert.IN = X10
-    Timer1Orange.IN = X20
-    Timer1Rouge.IN = X30
+    if CE100_110 :
+        X100 = 0
+        X110 = 1
+    if CE110_100 :
+        X110 = 0
+        X100 = 1
 
-    Feu2Vert.value = X40 and not X1
-    Feu2Orange.value = X50
-    Feu2Rouge.value = (X10 or X20 or X30 or X60) and not X1
+    # Les actions
 
-    Timer2Vert.IN = X40
-    Timer2Orange.IN = X50
-    Timer2Rouge.IN = X60
+    TimerP1.IN = X5
+    TimerP2.IN = X6
 
-    LedJour.value = X100
+    Timer1.IN = FeuVert.value = X20
+    Timer2.IN = X30
+    Timer3.IN = X40
+    Timer4.IN = Feu2Vert.value = X50
+    Timer5.IN = X60
+    Timer6.IN = X70
 
-    TimerJour.IN = X100
-    TimerNuit.IN = X200
-    
-    TimerC1.IN = X1000
-    TimerC2.IN = X2000
-    if X1:
-        Feu1Orange.value = X1000
-        Feu2Orange.value = X1000
+    TimerJour.IN = FeuJour.value = X100
+    TimerNuit.IN = X110
+
+    Feu2Rouge.value = X20 or X30 or X40 or X70
+    FeuRouge.value = X40 or X50 or X60 or X70
+
+    FeuOrange.value = X6 or X30
+    Feu2Orange.value = X6 or X60
+
+    # Affichage
+
+    mt.config_feux(listeTempos,modes)
