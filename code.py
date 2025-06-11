@@ -93,8 +93,8 @@ while True:
 
     # Les conditions dévolution
 
-    CE1_2 = (mt.panne == 0)
-    CE2_1 = (mt.panne == 1)
+    CE1_2 = (mt.panne == 0) and X1
+    CE2_1 = (mt.panne == 1) and X2
 
     CE5_6 = TimerP1.Q and X5 and X1
     CE6_5 = (TimerP2.Q and X6) or X2
