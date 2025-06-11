@@ -101,12 +101,12 @@ while True:
 
     CE10_20 = X2 and X10
     CE20_30 = (Timer1.Q and X20 and X100) or BpMag.value == False or BpP1.value == False or BpP2.value == False or X1
-    CE30_40 = (Timer2.Q and X30) or X1
-    CE40_50 = (Timer3.Q and X40) or X1
-    CE50_60 = (Timer4.Q and X50) or X1
-    CE60_70 = (Timer5.Q and X60) or X1
+    CE30_40 = (Timer2.Q or X1) and X30
+    CE40_50 = (Timer3.Q or X1) and X40
+    CE50_60 = (Timer4.Q or X1) and X50
+    CE60_70 = (Timer5.Q or X1) and X60
     CE70_20 = Timer6.Q and X70 and X2
-    CE70_10 = X1
+    CE70_10 = X70 and X1
 
     CE100_110 = (TimerJour.Q and X100 and (mt.indexMenu == 2)) or mt.indexMenu == 1
     CE110_100 = (TimerNuit.Q and X110 and (mt.indexMenu == 2)) or mt.indexMenu == 0
@@ -171,14 +171,14 @@ while True:
     Timer5.IN = X60
     Timer6.IN = X70
 
-    TimerJour.IN = FeuJour.value = X100
-    TimerNuit.IN = X110
-
     Feu2Rouge.value = X20 or X30 or X40 or X70
     FeuRouge.value = X40 or X50 or X60 or X70
 
     FeuOrange.value = X6 or X30
     Feu2Orange.value = X6 or X60
+    
+    TimerJour.IN = FeuJour.value = X100
+    TimerNuit.IN = X110
 
     # Affichage
 
